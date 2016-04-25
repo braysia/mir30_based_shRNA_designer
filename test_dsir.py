@@ -9,6 +9,8 @@ cds_seq = 'ATGCGACCCTCAGGGACCGCGAGAACCACACTGCTGGTGTTGCTGACCGCGCTCTGCGCCGCAGGTGGG
 nm_id = 'NM_007912.4'
 
 
+nm_id = 'NM_008960.2'
+
 # class estDsir(unittest.TestCase):
 #     def setUp(self):
 #         self.asd= AutomatedSirnaDesigner(nm_id, cds_seq)
@@ -42,8 +44,7 @@ class Testflow(unittest.TestCase):
         asd = AutomatedSirnaDesigner(nm_id, cds_seq)
         predicted = asd.run()
         shrnas = AddFifthOftheStrand(cds_seq, predicted).run()
-        sense = [turn_u_to_t(i[2]) for i in shrnas]
-        guide = [turn_u_to_t(i[3]) for i in shrnas]
+        import ipdb;ipdb.set_trace()
         print sense, guide
 
 

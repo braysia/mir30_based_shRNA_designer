@@ -5,10 +5,19 @@ import re
 from splinter import Browser
 import time
 from Bio import Entrez
-
+import pandas as pd
 
 email = '910taka@gmail.com'
 sub_email = ''
+
+
+class Shrna(object):
+    def __init__(self, position, antisense21, score, corrected_score):
+        self.position = position
+        self.antisense21 = antisense21
+        self.score = score
+        self.corrected_score = corrected_score
+
 
 class CdsGetter(object):
     def __init__(self, nm_id):
@@ -114,41 +123,42 @@ class AutomatedSirnaDesigner(object):
         splitted = html.split('\n')
         table = [i for i in splitted if 'input type="checkbox"' in i][0]
         table = table.split('align="center')[2:]
-        pattern = 'value."(?P<value>[0-9]*)"[^0-9]*[0-9]*[^0-9]*(?P<pos>[0-9]*)[^A-Z]*(?P<sense>[A-Z]*)[^A-Z]*(?P<antisense>[A-Z]*)'
-        store = []
+        # pattern = 'value."(?P<value>[0-9]*)"[^0-9]*[0-9]*[^0-9]*(?P<pos>[0-9]*)[^A-Z]*(?P<sense>[A-Z]*)[^A-Z]*(?P<antisense>[A-Z]*)'
+        pattern = 'value."(?P<value>[0-9]*)"[^0-9]*[0-9]*[^0-9]*(?P<pos>[0-9]*)[^A-Z]*(?P<sense>[A-Z]*)[^A-Z]*(?P<antisense>[A-Z]*)[^0-9]*(?P<score>[0-9\.]*)[^0-9]*(?P<corrected_score>[0-9\.]*)'
+        predicted = []
         for t in table:
             regexp = re.search(pattern, t)
-            store.append((regexp.group('value'), regexp.group('pos'), regexp.group('sense'), regexp.group('antisense')))
-        return store            
+            predicted.append(Shrna(regexp.group('pos'), regexp.group('antisense'), regexp.group('score'), regexp.group('corrected_score')))
+        return predicted
 
 
 class AddFifthOftheStrand(object):
-    '''predicted_set is a tuple of number, position, sense and antisense sequences without 5'th of the sense
-    and 3' of the guide strand. This class will translate 21-bp to 22-bp. 
+    '''shrnas is a list of Shrna class
     '''
-    def __init__(self, cds_seq, predicted_set):
+    def __init__(self, cds_seq, shrnas):
         self.cds_seq = cds_seq
-        self.predicted_set = [list(i) for i in predicted_set] # turn tuple to list
+        self.shrnas = shrnas
 
     def run(self):
-        for pset in self.predicted_set:
-            self.turn_21to22(self.cds_seq, pset)
-        return self.predicted_set
+        for shrna in self.shrnas:
+            self.turn_21to22(self.cds_seq, shrna)
+        return self.shrnas
 
-    def turn_21to22(self, cds_seq, pset):
-        pos = int(pset[1])
+    def turn_21to22(self, cds_seq, shrna):
+        pos = int(shrna.position)
         base = Seq(cds_seq).transcribe()[pos-2]
+        sense21 = str(Seq(shrna.antisense21).reverse_complement())
+        sense21 = turn_u_to_t(sense21)
+        shrna.guide_strand = str(Seq(turn_u_to_t(base) + sense21).reverse_complement())
         if base in ['A', 'U', 'a', 'u']:
-            pset[2] = 'C' + pset[2]
-            pset[3] = pset[3] + str(Seq(base).reverse_complement())
+            shrna.sense_strand = 'C' + sense21
         elif base in ['C', 'G', 'c', 'g']:
-            pset[2] = 'A' + pset[2]
-            pset[3] = pset[3] + str(Seq(base).reverse_complement())
+            shrna.sense_strand = 'A' + sense21
 
 
 def turn_u_to_t(seq):
-    seq.replace('U', 'T')
-    seq.replace('u', 'T')
+    seq = seq.replace('U', 'T')
+    seq = seq.replace('u', 'T')
     return seq
 
 if __name__ == '__main__':
