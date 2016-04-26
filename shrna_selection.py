@@ -161,6 +161,24 @@ def turn_u_to_t(seq):
     seq = seq.replace('u', 'T')
     return seq
 
+def translate_to_pd_df(shrnas):
+    df = pd.DataFrame({'position':[i.position for i in shrnas], 'sense': [i.sense_strand for i in shrnas], 'guide':[i.guide_strand for i in shrnas], 'score':[i.score for i in shrnas], 'corrected_score':[i.corrected_score for i in shrnas]})
+    return df
+
+
+class ShrnaSelection(object):
+    def __init__(self, nm_id):
+        self.nm_id = nm_id
+
+    def run(self):
+        nm_id = self.nm_id
+        cds_seq = CdsGetter(nm_id).run()
+        predicted = AutomatedSirnaDesigner(nm_id, cds_seq).run()
+        shrnas = AddFifthOftheStrand(cds_seq, predicted).run()
+        df = translate_to_pd_df(shrnas)
+        df.to_csv(nm_id+'.csv')
+
+
 if __name__ == '__main__':
     # seq = 'UUGCGUAGCACAAAUUUCGGU'
     # pick_rna(seq)
@@ -168,4 +186,4 @@ if __name__ == '__main__':
     # nm_id = 'NM_007912.4'
     # cds_seq = CdsGetter(nm_id).run()
     # Dsir(nm_id, cds_seq).run()
-    pass
+    ShrnaSelection('NM_007912.4').run()
