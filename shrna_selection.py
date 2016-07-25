@@ -1,3 +1,13 @@
+"""
+High-thoughput shRNA design for mir30-based shRNA.
+http://www.nature.com/nprot/journal/v7/n2/fig_tab/nprot.2011.446_F2.html
+
+Supply email address.
+Usage:
+    `python shrna_selection.py "NM_007912.4"`
+"""
+
+
 from __future__ import division
 from Bio.Seq import Seq
 import bioservices as bs
@@ -6,8 +16,9 @@ from splinter import Browser
 import time
 from Bio import Entrez
 import pandas as pd
+import sys
 
-email = '910taka@gmail.com'
+email = '@gmail.com'
 sub_email = ''
 
 
@@ -29,7 +40,7 @@ class CdsGetter(object):
         gb_sequences = self.retrieve_sequences()
         start_pos, end_pos = self.retrieve_coding_pos()
 
-        print gb_sequences, start_pos, end_pos
+        # print gb_sequences, start_pos, end_pos
         cds_seq = gb_sequences[start_pos-1:end_pos]
         return cds_seq
 
@@ -110,7 +121,7 @@ class AutomatedSirnaDesigner(object):
 
     def run_analysis(self):
         url = 'http://biodev.extra.cea.fr/DSIR/DSIR.html'
- 
+
         with Browser() as browser:
             browser.visit(url)
             browser.find_by_name('seqname').fill('test')
@@ -180,10 +191,5 @@ class ShrnaSelection(object):
 
 
 if __name__ == '__main__':
-    # seq = 'UUGCGUAGCACAAAUUUCGGU'
-    # pick_rna(seq)
-
-    # nm_id = 'NM_007912.4'
-    # cds_seq = CdsGetter(nm_id).run()
-    # Dsir(nm_id, cds_seq).run()
-    ShrnaSelection('NM_007912.4').run()
+    ShrnaSelection(sys.argv[1]).run()
+    print "csv file is created."
