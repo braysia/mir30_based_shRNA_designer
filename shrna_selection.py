@@ -5,6 +5,8 @@ http://www.nature.com/nprot/journal/v7/n2/fig_tab/nprot.2011.446_F2.html
 Supply email address.
 Usage:
     `python shrna_selection.py "NM_007912.4"`
+See TK288 for how to put the estimated seq into the backbone.
+
 """
 
 
